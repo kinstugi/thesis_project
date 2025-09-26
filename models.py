@@ -43,5 +43,6 @@ class Solution(Base):
     question = relationship("Question")
     language = Column(String, nullable=False)
     code = Column(String, nullable=False)
+    embedding = Column(String)  # Assuming embedding is stored as a string for simplicity, change to pgvector if using PostgreSQL
 
 Base.metadata.create_all(engine)

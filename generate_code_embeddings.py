@@ -1,7 +1,8 @@
 from models import Session, Solution
 from huggingface_hub import InferenceClient
 from dotenv import load_dotenv
-import os
+import os, time
+
 
 load_dotenv()
 
@@ -16,16 +17,23 @@ if __name__ == "__main__":
         raise ValueError("HUGGINGFACE_TOKEN environment variable not set")
     
     client = InferenceClient(api_key=hf_token, provider="auto")
-    solutions = session.query(Solution).all()
+    chunk = 100
+    current_page = 0
 
-    for solution in solutions:
-        # if solution.language == "cpp":
-        #     continue
-        code = solution.code
-        embedding = len(code)
-        if embedding > 1000:
-            print(f"{code}")
+    while True:
+        solutions = session.query(Solution).limit(chunk).offset(current_page * chunk)
+        if not solutions:
+            break
+        
+        for solution in solutions:
             
-        # embedding = client.feature_extraction(code, model="microsoft/codebert-base")   
-        print(embedding)
-        print("___________________________")
+            code = solution.code
+            embedding = client.feature_extraction(code, model="microsoft/codebert-base")   
+            #convert embedding to string
+            embedding_str = ','.join(map(str, embedding[0]))
+            solution.embedding = embedding_str
+            session.commit()
+            time.sleep(1)
+            print("genereated embeddings for this ...........")
+        time.sleep(30)
+        current_page += 1
