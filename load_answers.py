@@ -16,10 +16,9 @@ if __name__ == "__main__":
         slug = "-".join((directory.split(".")[1].lower().split()))
         print(slug)
         question = session.query(Question).filter_by(slug=slug).first()
-
         if not question:
             print(f"Question with slug {slug} not found")
-            missing_questions.append(f"https://leetcode.com/problems/{slug}")
+            missing_questions.append(f"{slug}")
             continue
 
         for filename in os.listdir(full_path):
