@@ -1,6 +1,8 @@
 import csv
 from models import Session, Question, TopicTag, Solution
 import json
+from sqlalchemy.orm import joinedload
+
 
 def load_questions_from_csv_to_db():
     session = Session()
@@ -52,6 +54,23 @@ def load_questions_csv(file_path: str):
     with open('./missing_questions.json', 'w') as fh:
         json.dump(missing, fh, indent=4)
 
+def check_questions_without_answers():
+    session = Session()
+    questions = session.query(Question).options(joinedload(Question.solutions)).all()
+    num = 0
+    missing = []
+
+    for question in questions:
+        if not question.solutions:
+            num += 1
+            missing.append(f"https://leetcode.com/problems/{question.slug}")
+    
+    with open('questions_without_answers.txt', 'w') as fh:
+        for link in missing:
+            fh.write(link + '\n')
+    return num
+
 if __name__ == "__main__":
     # load_questions_from_csv_to_db()
-    load_questions_csv('./data/data.csv')
+    res = check_questions_without_answers()
+    print(res)
